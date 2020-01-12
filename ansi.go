@@ -91,7 +91,7 @@ func (a *ansi) Write(text []byte) (int, error) {
 				case 'm': // Select Graphic Rendition.
 					var (
 						background, foreground, attributes string
-						clearAttributes                    bool
+						clearAttributes, resetAttributes   bool
 					)
 					fields := strings.Split(a.csiParameter.String(), ";")
 					if len(fields) == 0 || len(fields) == 1 && fields[0] == "0" {
@@ -130,6 +130,8 @@ func (a *ansi) Write(text []byte) (int, error) {
 				FieldLoop:
 					for index, field := range fields {
 						switch field {
+						case "0":
+							resetAttributes = true
 						case "1", "01":
 							attributes += "b"
 						case "2", "02":
@@ -193,11 +195,24 @@ func (a *ansi) Write(text []byte) (int, error) {
 							break FieldLoop
 						}
 					}
+					if resetAttributes {
+						attributes = "-"
+						foreground = "-"
+						background = "-"
+					}
+					if len(background) > 0 {
+						background = ":" + background
+					}
+
 					if len(attributes) > 0 || clearAttributes {
-						attributes = ":" + attributes
+						if len(background) > 0 {
+							attributes = ":" + attributes
+						} else {
+							attributes = "::" + attributes
+						}
 					}
 					if len(foreground) > 0 || len(background) > 0 || len(attributes) > 0 {
-						fmt.Fprintf(a.buffer, "[%s:%s%s]", foreground, background, attributes)
+						fmt.Fprintf(a.buffer, "[%s%s%s]", foreground, background, attributes)
 					}
 				}
 				a.state = ansiText
