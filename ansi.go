@@ -225,7 +225,17 @@ func (a *ansi) Write(text []byte) (int, error) {
 							}
 						}
 					}
+
 					attributes := makeAttr(reset, bold, dim, italic, underline, blink, reverse)
+					if len(background) > 0 {
+						background = ":" + background
+					}
+
+					if len(attributes) > 0 {
+						if len(background) <= 0 {
+							attributes = ":" + attributes
+						}
+					}
 					if len(foreground) > 0 || len(background) > 0 || len(attributes) > 0 {
 						fmt.Fprintf(a.buffer, "[%s%s%s]", foreground, background, attributes)
 					}
