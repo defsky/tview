@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/gdamore/tcell"
 	runewidth "github.com/mattn/go-runewidth"
@@ -106,7 +108,13 @@ func styleFromTag(fgColor, bgColor, attributes string, tagSubstrings []string) (
 		if flags == "-" {
 			attributes = "-"
 		} else if flags != "" {
-			attributes = flags
+			for _, flag := range flags {
+				if strings.ContainsRune("lLbBdDrRuUiI", flag) {
+					attributes = strings.Replace(attributes, string(unicode.ToUpper(flag)), "", -1)
+					attributes = strings.Replace(attributes, string(unicode.ToLower(flag)), "", -1)
+					attributes = attributes + string(flag)
+				}
+			}
 		}
 	}
 

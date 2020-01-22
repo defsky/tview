@@ -592,6 +592,10 @@ func (t *TextView) reindexBuffer(width int) {
 	regionID := ""
 	var highlighted bool
 
+	var (
+		foregroundColor, backgroundColor, attributes string
+	)
+
 	// Go through each line in the buffer.
 	for bufferIndex, str := range t.buffer {
 		colorTagIndices, colorTags, regionIndices, regions, escapeIndices, strippedStr, _ := decomposeString(str, t.dynamicColors, t.regions)
@@ -632,8 +636,7 @@ func (t *TextView) reindexBuffer(width int) {
 
 		// Create index from split lines.
 		var (
-			originalPos, colorPos, regionPos, escapePos  int
-			foregroundColor, backgroundColor, attributes string
+			originalPos, colorPos, regionPos, escapePos int
 		)
 		for _, splitLine := range splitLines {
 			line := &textViewIndex{
