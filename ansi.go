@@ -95,8 +95,9 @@ func (a *ansi) Write(text []byte) (int, error) {
 						bold, dim, italic, underline, blink, reverse *bool
 					)
 
-					fields := strings.Split(a.csiParameter.String(), ";")
-					if len(fields) == 0 || len(fields) == 1 && fields[0] == "0" {
+					csiParameter := a.csiParameter.String()
+					fields := strings.Split(csiParameter, ";")
+					if len(csiParameter) == 0 || len(fields) == 1 && fields[0] == "0" {
 						// Reset.
 						if _, err := a.buffer.WriteString("[-:-:-]"); err != nil {
 							return 0, err
@@ -174,11 +175,7 @@ func (a *ansi) Write(text []byte) (int, error) {
 						case 27:
 							reverse = boolFalse()
 						case 30, 31, 32, 33, 34, 35, 36, 37:
-							bright := false
-							if bold != nil && *bold {
-								bright = true
-							}
-							foreground = lookupColor(field-30, bright)
+							foreground = lookupColor(field-30, isTrue(bold))
 						case 40, 41, 42, 43, 44, 45, 46, 47:
 							background = lookupColor(field-40, false)
 						case 90, 91, 92, 93, 94, 95, 96, 97:
@@ -274,6 +271,9 @@ func TranslateANSI(text string) string {
 
 func boolTrue() *bool  { b := true; return &b }
 func boolFalse() *bool { b := false; return &b }
+
+func isTrue(b *bool) bool  { return b != nil && *b }
+func isFalse(b *bool) bool { return b != nil && !*b }
 
 // makeAttr check SGR attributes, and generate a string.
 // If reset is True, then all attributes whose value is nil will be reset.

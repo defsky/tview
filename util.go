@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/gdamore/tcell"
 	runewidth "github.com/mattn/go-runewidth"
@@ -20,7 +22,7 @@ const (
 
 // Common regular expressions.
 var (
-	colorPattern     = regexp.MustCompile(`\[([a-zA-Z]+|#[0-9a-zA-Z]{6}|\-)?(:([a-zA-Z]+|#[0-9a-zA-Z]{6}|\-)?(?i)(:([LBDRUIlbdrui]+|\-)?)?)?\]`)
+	colorPattern     = regexp.MustCompile(`\[([a-zA-Z]+|#[0-9a-zA-Z]{6}|\-)?(:([a-zA-Z]+|#[0-9a-zA-Z]{6}|\-)?(?i)(:([lbdrui]+|\-)?)?)?\]`)
 	regionPattern    = regexp.MustCompile(`\["([a-zA-Z0-9_,;: \-\.]*)"\]`)
 	escapePattern    = regexp.MustCompile(`\[([a-zA-Z0-9_,;: \-\."#]+)\[(\[*)\]`)
 	nonEscapePattern = regexp.MustCompile(`(\[[a-zA-Z0-9_,;: \-\."#]+\[*)\]`)
@@ -106,7 +108,13 @@ func styleFromTag(fgColor, bgColor, attributes string, tagSubstrings []string) (
 		if flags == "-" {
 			attributes = "-"
 		} else if flags != "" {
-			attributes = flags
+			for _, flag := range flags {
+				if strings.ContainsRune("lLbBdDrRuUiI", flag) {
+					attributes = strings.Replace(attributes, string(unicode.ToUpper(flag)), "", -1)
+					attributes = strings.Replace(attributes, string(unicode.ToLower(flag)), "", -1)
+					attributes = attributes + string(flag)
+				}
+			}
 		}
 	}
 
@@ -126,7 +134,11 @@ func overlayStyle(background tcell.Color, prevAttr tcell.AttrMask, defaultStyle 
 
 	style = style.Foreground(defFg)
 	if fgColor != "" {
-		style = style.Foreground(tcell.GetColor(fgColor))
+		if fgColor == "-" {
+			style = style.Foreground(defFg)
+		} else {
+			style = style.Foreground(tcell.GetColor(fgColor))
+		}
 	}
 
 	if bgColor == "-" || bgColor == "" && defBg != tcell.ColorDefault {
