@@ -140,7 +140,7 @@ func (a *ansi) Write(text []byte) (int, error) {
 						}
 						switch field {
 						case 0:
-							background = "-"
+							background = "black"
 							foreground = "-"
 							reset = true
 							bold = nil
